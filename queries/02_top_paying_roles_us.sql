@@ -1,5 +1,6 @@
 --- Highest 15 paying tech roles in the US
 --- Filtered to full-time only
+--- Minimum threshold of 10 records for significance
 SELECT
   job_title,
   ROUND(AVG(salary_in_usd), 0) AS avg_salary_usd,
@@ -8,5 +9,6 @@ SELECT
   WHERE employee_residence = 'US'
   AND employment_type = 'FT'
   GROUP BY job_title
+  HAVING COUNT(*)>=10
   ORDER BY avg_salary_usd DESC
   LIMIT 15
