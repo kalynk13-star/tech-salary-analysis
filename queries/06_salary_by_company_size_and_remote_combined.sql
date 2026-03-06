@@ -1,7 +1,6 @@
---- Combined remote ratio and company size compared to salary in the US
+--- Remote ratio and company size compared to salary in the US
 --- Filtered to full-time only
---- See 04_salary_by_remote_ratio.sql and 05_salary_by_company_size.sql for individual variable analysis before combination
---- Note: small sample sizes for hybrid roles; should exclude from analysis
+--- Minimum threshold of 10 records for significance
 WITH base AS(
   SELECT 
     company_size,
@@ -12,7 +11,9 @@ WITH base AS(
   WHERE employee_residence = 'US'
   AND employment_type = 'FT'
   GROUP BY company_size, remote_ratio
+  HAVING COUNT(*)>=10
 ),
+
 with_baseline AS (
   SELECT *,
     FIRST_VALUE(avg_salary_usd) OVER (
@@ -21,8 +22,13 @@ with_baseline AS (
     ) AS inoffice_baseline
   FROM base
 )
+
 SELECT
-  company_size,
+  CASE company_size
+    WHEN 'S' THEN 'Small'
+    WHEN 'M' THEN 'Mid-size' 
+    WHEN 'L' THEN 'Large'
+    End AS company_size,
   remote_ratio,
   avg_salary_usd,
   number_of_roles,
@@ -30,3 +36,4 @@ SELECT
   ROUND((avg_salary_usd - inoffice_baseline) / inoffice_baseline * 100, 1) AS pct_delta_vs_inoffice
 FROM with_baseline
 ORDER BY company_size, remote_ratio
+
